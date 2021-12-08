@@ -116,3 +116,7 @@ df=data.frame(BranchRegionID=c(counts[,1]),FamilyRevenueID=c(counts[,2]), Freq=c
 
 p<-ggplot(df,aes(x=BranchRegionID,y=Freq,fill=FamilyRevenueID)) + geom_bar(position="stack", stat="identity") 
 p
+
+#abfbafa
+
+
