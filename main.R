@@ -90,33 +90,52 @@ plotdata<-dataID[order(dataID$BranchRegionID),]
 
 
 library(plyr)
+#form new count dataset that contains BranchRegionID, FamilyRevenueID, Freq= number of clients with revenue in bank
 counts <- ddply(plotdata, .(plotdata$BranchRegionID, plotdata$FamilyRevenueID), nrow)
 names(counts) <- c("BranchRegionID,", "FamilyRevenueID", "Freq")
 
 counts[counts=="-666"]<--1
 counts
-
+#create unique names vector 
 names<- unique(counts[,1])
 names 
-# barplot(
-#   t(counts)[2:3,],
-#   names.arg= t(counts)[1,],
-#   space=c(0,diff(t(counts)[1,])),
-#   axis.lty=1
-# )
 
- 
-# # считаем сумму по ключу
-# sumbykey<-with(dataID,tapply(dataID[,2],dataID[,1],sum))
-# sumbykey
-# 
 library(ggplot2)
 
 df=data.frame(BranchRegionID=c(counts[,1]),FamilyRevenueID=c(counts[,2]), Freq=c(counts[,3]) )
 
-p<-ggplot(df,aes(x=BranchRegionID,y=Freq,fill=FamilyRevenueID)) + geom_bar(position="stack", stat="identity") 
+p<-ggplot(df,aes(x=BranchRegionID,y=Freq,fill=FamilyRevenueID)) + geom_bar(position="stack", stat="identity")+scale_x_continuous(breaks=seq(names[1], names[length(names)], 1))
 p
 
-#abfbafa
+
+#поменяем запятые на точки в неоходимой колонке
+dataset[, 15]<-as.numeric(gsub(",", ".", gsub("\\.", "", dataset[, 15]))) 
+dataset[,15]
+
+
+clsdata<-data.frame(as.numeric(target),dataset[,2], dataset[,14],dataset[,15],dataset[,33],dataset[,7])
+
+colnames(clsdata) <- c("target","Works", "FamilyRevenueID","Revenue","LastCreditSum","Eduld")
+clsdata
+
+clsdata<-clsdata[1:1000,-15]
+set.seed(2)
+#разбиваем 70% для обучения , 30 %
+id<-sample(2,nrow(clsdata),prob=c(0.7,0.3),replace=T)
+clstrain<-clsdata[id==1,]
+clstest<-clsdata[id==2,]
+
+library(e1071)
+library(caret)
+str(clstrain)
+#using naiveBayes to train model 
+cls_nb<-naiveBayes(target~ Revenue+Works+FamilyRevenueID+LastCreditSum+Eduld,data=clstrain)
+cls_nb
+
+predictcls<-predict(cls_nb,clstest)
+predictcls
+#check the results of learning 
+confusionMatrix(table(predictcls,clstest$target))
+
 
 
